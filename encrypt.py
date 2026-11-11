@@ -17,6 +17,7 @@ ITERATIONS = 250_000
 WRAPPER = r"""<!doctype html>
 <html lang="nb">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -66,7 +67,7 @@ footer{border-top:4px double #111;margin-top:2.4rem;padding-top:10px;font-size:.
     <h2>Dette bladet er låst</h2>
     <p>Oppgi passordet for å lese den virtuelle handelsloggen.</p>
     <label for="pw">Passord</label>
-    <input id="pw" name="password" type="password" autocomplete="current-password" required autofocus>
+    <input id="pw" name="password" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required autofocus>
     <button type="submit">Åpne bladet</button>
     <p class="err" id="err" role="alert"></p>
   </form>
@@ -107,10 +108,14 @@ footer{border-top:4px double #111;margin-top:2.4rem;padding-top:10px;font-size:.
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     err.textContent = "";
-    const pw = input.value;
+    const pw = input.value.trim();
     if (!pw){ err.textContent = "Skriv inn passordet."; return; }
+    if (!(window.crypto && crypto.subtle)){ err.textContent = "Nettleseren støtter ikke opplåsing. Prøv Safari eller Chrome."; return; }
+    const tries = [...new Set([pw, pw.toLowerCase(), pw.charAt(0).toLowerCase()+pw.slice(1)])];
     try {
-      const html = await decrypt(pw);
+      let html = null;
+      for (const t of tries){ try { html = await decrypt(t); break; } catch(_){} }
+      if (html === null) throw new Error("bad");
       document.open();
       document.write(html);
       document.close();
