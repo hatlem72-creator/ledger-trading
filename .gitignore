@@ -1,0 +1,7 @@
+pw.txt
+state.json
+plaintext.html
+__pycache__/
+*.pyc
+.DS_Store
+*.local
